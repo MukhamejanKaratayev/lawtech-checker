@@ -2,6 +2,7 @@ import re
 import streamlit as st
 from io import StringIO
 from annotated_text import annotated_text
+from src import remove_footnotes, find_incorrect_dates
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -13,6 +14,9 @@ st.set_page_config(
 # Создание переменных session state
 if 'input_text' not in st.session_state:
     st.session_state['input_text'] = ''
+
+if 'output_text' not in st.session_state:
+    st.session_state['output_text'] = ''
 
 # Functions
 
@@ -38,7 +42,9 @@ with st.sidebar:
             st.session_state['input_text'] = read_text_file(uploaded_file)
             if check_buton:
                 # Предсказание и сохранение в session state
-                print('Проверка файла')
+                st.session_state['output_text'] = remove_footnotes(
+                    st.session_state['input_text'])
+
 
 # Main section start
 # Основной блок
@@ -53,25 +59,25 @@ with st.expander("Описание проекта"):
     Наша задача - построить модель, которая будет предсказывать отток клиентов.
     """)
 
-if st.session_state['input_text'] != '':
+if st.session_state['output_text'] != '':
     col1, col2 = st.columns(2, gap='medium')
     with col1:
         st.subheader('Входной текст')
         st.write(st.session_state['input_text'])
     with col2:
         st.subheader('Результат')
-
-        annotated_text(
-            "This ",
-            ("is", "", "#fea"),
-            " some ",
-            ("annotated", "adj"),
-            ("text", "noun"),
-            " for those of ",
-            ("you", "pronoun"),
-            " who ",
-            ("like", "verb"),
-            " this sort of ",
-            ("thing", "noun"),
-            "."
-        )
+        st.write(st.session_state['output_text'])
+        # annotated_text(
+        #     "This ",
+        #     ("is", "", "#fea"),
+        #     " some ",
+        #     ("annotated", "adj"),
+        #     ("text", "noun"),
+        #     " for those of ",
+        #     ("you", "pronoun"),
+        #     " who ",
+        #     ("like", "verb"),
+        #     " this sort of ",
+        #     ("thing", "noun"),
+        #     "."
+        # )
