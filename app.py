@@ -2,7 +2,7 @@ import re
 import streamlit as st
 from io import StringIO
 from annotated_text import annotated_text
-from src import remove_footnotes, find_incorrect_dates
+from src import remove_footnotes, find_incorrect_dates, highlight_errors
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -17,6 +17,12 @@ if 'input_text' not in st.session_state:
 
 if 'output_text' not in st.session_state:
     st.session_state['output_text'] = ''
+
+if 'errors_in_text' not in st.session_state:
+    st.session_state['errors_in_text'] = []
+
+if 'output_text_with_errors' not in st.session_state:
+    st.session_state['output_text_with_errors'] = []
 
 # Functions
 
@@ -44,7 +50,10 @@ with st.sidebar:
                 # Предсказание и сохранение в session state
                 st.session_state['output_text'] = remove_footnotes(
                     st.session_state['input_text'])
-
+                st.session_state['errors_in_text'] = find_incorrect_dates(
+                    st.session_state['output_text'])
+                st.session_state['output_text_with_errors'] = highlight_errors(
+                    st.session_state['output_text'], st.session_state['errors_in_text'])
 
 # Main section start
 # Основной блок
@@ -59,25 +68,14 @@ with st.expander("Описание проекта"):
     Наша задача - построить модель, которая будет предсказывать отток клиентов.
     """)
 
-if st.session_state['output_text'] != '':
+if st.session_state['output_text'] != '' and st.session_state['output_text_with_errors'] != []:
+    st.subheader('Найденные ошибки:')
+    st.write(st.session_state['errors_in_text'])
     col1, col2 = st.columns(2, gap='medium')
     with col1:
         st.subheader('Входной текст')
         st.write(st.session_state['input_text'])
     with col2:
         st.subheader('Результат')
-        st.write(st.session_state['output_text'])
-        # annotated_text(
-        #     "This ",
-        #     ("is", "", "#fea"),
-        #     " some ",
-        #     ("annotated", "adj"),
-        #     ("text", "noun"),
-        #     " for those of ",
-        #     ("you", "pronoun"),
-        #     " who ",
-        #     ("like", "verb"),
-        #     " this sort of ",
-        #     ("thing", "noun"),
-        #     "."
-        # )
+        # st.write(st.session_state['output_text'])
+        annotated_text(*st.session_state['output_text_with_errors'])
