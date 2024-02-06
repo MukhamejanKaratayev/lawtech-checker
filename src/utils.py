@@ -38,6 +38,7 @@ def title_check(user_input: str) -> SyntaxCheck:
     The title (Title) of the normative legal act must indicate the subject of regulation of the adopted normative legal act and must be brief.
     Your task is to analyze the input legal document and check if the title meets the specified criteria. If the title does not meet the criteria, please highlight it in the text and provide a brief explanation of the error. If the title meets the criteria, please indicate that the title is error-free.
     With the following JSON format.
+    Respond in Russian language.
 
     Input: {user_input}
 
