@@ -6,7 +6,7 @@ from llama_index.bridge.pydantic import BaseModel, Field
 from llama_index.llms import OpenAI
 from llama_index.program import OpenAIPydanticProgram
 
-config = dotenv_values(find_dotenv("ai-law-analyzer/.env"))
+config = dotenv_values(find_dotenv("lawtech-checker/.env"))
 OPENAI_API_KEY = config["OPENAI_API_KEY"]
 
 
