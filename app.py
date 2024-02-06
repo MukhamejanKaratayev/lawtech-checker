@@ -4,7 +4,7 @@ from io import StringIO
 import streamlit as st
 from annotated_text import annotated_text
 
-from src import find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit
+from src import find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -20,6 +20,9 @@ if "input_text" not in st.session_state:
 if "output_text" not in st.session_state:
     st.session_state["output_text"] = ""
 
+if "title_check_res" not in st.session_state:
+    st.session_state["title_check_res"] = ""
+
 if "errors_in_text" not in st.session_state:
     st.session_state["errors_in_text"] = []
 
@@ -29,13 +32,20 @@ if "output_text_with_errors" not in st.session_state:
 # Functions
 
 
+def reset_session_state():
+    st.session_state["input_text"] = ""
+    st.session_state["output_text"] = ""
+    st.session_state["title_check_res"] = ""
+    st.session_state["errors_in_text"] = []
+    st.session_state["output_text_with_errors"] = []
+
+
 def read_text_file(uploaded_file):
     stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
     # To read file as string:
     return stringio.read()
 
 
-title_check_res = ''
 # Sidebar
 with st.sidebar:
     st.title("🗂 Ввод данных")
@@ -44,7 +54,7 @@ with st.sidebar:
     with tab1:
         # Вкладка с загрузкой файла, выбором порога и кнопкой предсказания (вкладка 1)
         uploaded_file = st.file_uploader(
-            "Выбрать CSV файл", type=["txt", "pdf"], on_change=None
+            "Выбрать CSV файл", type=["txt", "pdf"], on_change=reset_session_state
         )
         if uploaded_file is not None:
             check_buton = st.button(
@@ -66,7 +76,7 @@ with st.sidebar:
                     st.session_state["output_text"], st.session_state["errors_in_text"]
                 )
 
-                title_check_res = title_check(
+                st.session_state["title_check_res"] = title_check(
                     st.session_state["input_text"][:1000])
 
 # Main section start
@@ -88,11 +98,15 @@ if (
     st.session_state["output_text"] != ""
     and st.session_state["output_text_with_errors"] != []
 ):
+    st.divider()
     st.subheader("Найденные ошибки:")
     # st.json(st.session_state["errors_in_text"])
     display_errors_with_streamlit(st.session_state["errors_in_text"])
-    st.subheader("Проверка заголовка:")
-    st.write(title_check_res)
+
+    st.divider()
+    display_title_check_res(st.session_state["title_check_res"])
+    st.divider()
+
     col1, col2 = st.columns(2, gap="medium")
     with col1:
         st.subheader("Входной текст")

@@ -1,5 +1,6 @@
 streamlit
 st-annotated-text
+streamlit-shadcn-ui
 pydantic
 pydantic_core
 llama-index

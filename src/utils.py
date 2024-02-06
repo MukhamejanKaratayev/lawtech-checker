@@ -5,6 +5,7 @@ from llama_index.bridge.pydantic import BaseModel, Field
 from llama_index.llms import OpenAI
 from llama_index.program import OpenAIPydanticProgram
 import pandas as pd
+import streamlit_shadcn_ui as ui
 
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
@@ -123,31 +124,61 @@ def display_errors_with_streamlit(errors):
     # Считаем общее количество ошибок
     total_errors = len(errors)
     # Считаем количество ошибок каждого типа
-    error_types_count = {}
-    for error in errors:
-        if error["error_type"] in error_types_count:
-            error_types_count[error["error_type"]] += 1
-        else:
-            error_types_count[error["error_type"]] = 1
+    if total_errors > 0:
+        error_types_count = {}
+        for error in errors:
+            if error["error_type"] in error_types_count:
+                error_types_count[error["error_type"]] += 1
+            else:
+                error_types_count[error["error_type"]] = 1
 
-    # Выводим общее количество ошибок
-    # st.write(f"Общее количество ошибок: {total_errors}")
-    st.metric(label="Общее количество ошибок", value=total_errors)
+        # Выводим общее количество ошибок
+        # st.metric(label="Общее количество ошибок", value=total_errors)
+        cols = st.columns(5)
+        with cols[0]:
+            ui.metric_card(title="Общее количество ошибок",
+                           content=total_errors, description="", key="card1")
 
-    # Выводим количество ошибок каждого типа
-    # st.write("Количество ошибок по типам:")
-    # for error_type, count in error_types_count.items():
-    #     st.write(f"{error_type}: {count}")
+        # Преобразование списка ошибок в DataFrame
+        df_errors = pd.DataFrame(errors)
+        df_errors.rename(
+            columns={"error_type": "Тип ошибки", "error_text": "Текст ошибки"}, inplace=True
+        )
+        # Вывод таблицы ошибок в Streamlit
+        if len(df_errors) > 0:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("Детали ошибок:")
+                st.table(df_errors[["Тип ошибки", "Текст ошибки"]])
+            with col2:
+                # Преобразование подсчетов в DataFrame
+                st.write("Количество ошибок каждого типа:")
+                df_errors = pd.DataFrame(list(error_types_count.items()), columns=[
+                    'Тип ошибки', 'Count'])
 
-    # Преобразование списка ошибок в DataFrame
-    df_errors = pd.DataFrame(errors)
-    df_errors.rename(
-        columns={"error_type": "Тип ошибки", "error_text": "Текст ошибки"}, inplace=True
-    )
-    # Вывод таблицы ошибок в Streamlit
-    st.table(df_errors)
-    # Выводим ошибки красивым образом
-    # st.write("Детали ошибок:")
-    # for error in errors:
-    #     st.error(
-    #         f"Тип ошибки: {error['error_type']}" + ' \n ' + f"Текст ошибки: {error['error_text']}")
+                # Сортировка для лучшей визуализации (опционально)
+                df_errors = df_errors.sort_values(by='Count', ascending=True)
+
+                # Отображение гистограммы в Streamlit
+                st.bar_chart(df_errors.set_index('Тип ошибки'))
+        # Выводим ошибки красивым образом
+        # st.write("Детали ошибок:")
+        # for error in errors:
+        #     st.error(
+        #         f"Тип ошибки: {error['error_type']}" + ' \n ' + f"Текст ошибки: {error['error_text']}")
+    else:
+        st.success("Ошибок не найдено")
+
+
+def display_title_check_res(title_check_res):
+    st.subheader("Проверка заголовка:")
+    if title_check_res.error_highlight != "":
+        st.caption("Заголовок: ")
+        st.subheader(title_check_res.error_highlight)
+    if title_check_res.valid == False:
+        st.error("Заголовок не соответствует требованиям")
+        st.write("Рекомендации:")
+        for error in title_check_res.error_desc:
+            st.write("- " + error)
+    else:
+        st.success("Заголовок соответствует требованиям")
