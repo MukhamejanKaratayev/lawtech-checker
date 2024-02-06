@@ -4,6 +4,7 @@ import streamlit as st
 from llama_index.bridge.pydantic import BaseModel, Field
 from llama_index.llms import OpenAI
 from llama_index.program import OpenAIPydanticProgram
+import pandas as pd
 
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
@@ -116,3 +117,37 @@ def highlight_errors(text, errors):
 
     # Call annotated_text with the collected parts
     return parts
+
+
+def display_errors_with_streamlit(errors):
+    # Считаем общее количество ошибок
+    total_errors = len(errors)
+    # Считаем количество ошибок каждого типа
+    error_types_count = {}
+    for error in errors:
+        if error["error_type"] in error_types_count:
+            error_types_count[error["error_type"]] += 1
+        else:
+            error_types_count[error["error_type"]] = 1
+
+    # Выводим общее количество ошибок
+    # st.write(f"Общее количество ошибок: {total_errors}")
+    st.metric(label="Общее количество ошибок", value=total_errors)
+
+    # Выводим количество ошибок каждого типа
+    # st.write("Количество ошибок по типам:")
+    # for error_type, count in error_types_count.items():
+    #     st.write(f"{error_type}: {count}")
+
+    # Преобразование списка ошибок в DataFrame
+    df_errors = pd.DataFrame(errors)
+    df_errors.rename(
+        columns={"error_type": "Тип ошибки", "error_text": "Текст ошибки"}, inplace=True
+    )
+    # Вывод таблицы ошибок в Streamlit
+    st.table(df_errors)
+    # Выводим ошибки красивым образом
+    # st.write("Детали ошибок:")
+    # for error in errors:
+    #     st.error(
+    #         f"Тип ошибки: {error['error_type']}" + ' \n ' + f"Текст ошибки: {error['error_text']}")

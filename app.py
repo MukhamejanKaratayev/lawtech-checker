@@ -4,7 +4,7 @@ from io import StringIO
 import streamlit as st
 from annotated_text import annotated_text
 
-from src import find_incorrect_dates, highlight_errors, remove_footnotes, title_check
+from src import find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -74,23 +74,24 @@ with st.sidebar:
 # st.image('https://miro.medium.com/v2/resize:fit:1400/1*WqId29D5dN_8DhiYQcHa2w.png', width=400)
 st.title("Проверка юр. техники")
 
-with st.expander("Описание проекта"):
-    st.write(
-        """
-    В данном проекте мы рассмотрим задачу прогнозирования оттока клиентов.
-    Для этого мы будем использовать датасет из открытых источников.
-    Датасет содержит информацию о клиентах, которые уже ушли или остались в компании.
-    Наша задача - построить модель, которая будет предсказывать отток клиентов.
-    """
-    )
+# with st.expander("Описание проекта"):
+#     st.write(
+#         """
+#     В данном проекте мы рассмотрим задачу прогнозирования оттока клиентов.
+#     Для этого мы будем использовать датасет из открытых источников.
+#     Датасет содержит информацию о клиентах, которые уже ушли или остались в компании.
+#     Наша задача - построить модель, которая будет предсказывать отток клиентов.
+#     """
+#     )
 
 if (
     st.session_state["output_text"] != ""
     and st.session_state["output_text_with_errors"] != []
 ):
     st.subheader("Найденные ошибки:")
-    st.write(st.session_state["errors_in_text"])
-    st.subheader("Title check:")
+    # st.json(st.session_state["errors_in_text"])
+    display_errors_with_streamlit(st.session_state["errors_in_text"])
+    st.subheader("Проверка заголовка:")
     st.write(title_check_res)
     col1, col2 = st.columns(2, gap="medium")
     with col1:
