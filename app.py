@@ -4,7 +4,7 @@ from io import StringIO
 import streamlit as st
 from annotated_text import annotated_text
 
-from src import find_incorrect_dates, highlight_errors, remove_footnotes
+from src import find_incorrect_dates, highlight_errors, remove_footnotes, title_check
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -35,6 +35,7 @@ def read_text_file(uploaded_file):
     return stringio.read()
 
 
+title_check_res = ''
 # Sidebar
 with st.sidebar:
     st.title("🗂 Ввод данных")
@@ -65,6 +66,9 @@ with st.sidebar:
                     st.session_state["output_text"], st.session_state["errors_in_text"]
                 )
 
+                title_check_res = title_check(
+                    st.session_state["input_text"][:1000])
+
 # Main section start
 # Основной блок
 # st.image('https://miro.medium.com/v2/resize:fit:1400/1*WqId29D5dN_8DhiYQcHa2w.png', width=400)
@@ -86,6 +90,8 @@ if (
 ):
     st.subheader("Найденные ошибки:")
     st.write(st.session_state["errors_in_text"])
+    st.subheader("Title check:")
+    st.write(title_check_res)
     col1, col2 = st.columns(2, gap="medium")
     with col1:
         st.subheader("Входной текст")

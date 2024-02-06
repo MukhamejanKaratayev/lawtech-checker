@@ -1,13 +1,11 @@
 import re
 from typing import List
-
-from dotenv import dotenv_values, find_dotenv
+import streamlit as st
 from llama_index.bridge.pydantic import BaseModel, Field
 from llama_index.llms import OpenAI
 from llama_index.program import OpenAIPydanticProgram
 
-config = dotenv_values(find_dotenv("lawtech-checker/.env"))
-OPENAI_API_KEY = config["OPENAI_API_KEY"]
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 
 class SyntaxCheck(BaseModel):
@@ -103,10 +101,10 @@ def highlight_errors(text, errors):
     for error in errors:
         # Add text before the error, if any
         if error["start"] > last_idx:
-            parts.append(text[last_idx : error["start"]])
+            parts.append(text[last_idx: error["start"]])
 
         # Extract the error text and add it with annotation
-        error_text = text[error["start"] : error["end"]]
+        error_text = text[error["start"]: error["end"]]
         # Use a fixed color, can be customized
         parts.append((error_text, error["error_type"], "#fea"))
 
