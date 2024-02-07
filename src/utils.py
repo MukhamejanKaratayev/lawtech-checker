@@ -47,7 +47,7 @@ def title_check(user_input: str) -> SyntaxCheck:
 
     program = OpenAIPydanticProgram.from_defaults(
         output_cls=SyntaxCheck,
-        llm=OpenAI(api_key=OPENAI_API_KEY, model="gpt-4-0125-preview"),
+        llm=OpenAI(api_key=OPENAI_API_KEY, model="gpt-4"),
         prompt_template_str=prompt_str,
         verbose=True,
     )
