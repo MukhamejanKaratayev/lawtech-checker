@@ -4,7 +4,7 @@ from io import StringIO
 import streamlit as st
 from annotated_text import annotated_text
 
-from src import check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
+from src import check_paragraphs_not_start_with_symbols, check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -83,10 +83,14 @@ with st.sidebar:
                 #     st.session_state["output_text"]
                 # )
                 # error place
+                # check_paragraphs_not_start_with_symbols
+                st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_paragraphs_not_start_with_symbols(
+                    st.session_state["output_text"]
+                )
                 st.session_state["output_text_with_errors"] = highlight_errors(
                     st.session_state["output_text"], st.session_state["errors_in_text"]
                 )
-
+                # uncomment this
                 st.session_state["title_check_res"] = title_check(
                     st.session_state["input_text"][:1000])
 
@@ -114,9 +118,10 @@ if (
     # st.json(st.session_state["errors_in_text"])
     display_errors_with_streamlit(st.session_state["errors_in_text"])
 
-    st.divider()
-    display_title_check_res(st.session_state["title_check_res"])
-    st.divider()
+    if st.session_state["title_check_res"] != "":
+        st.divider()
+        display_title_check_res(st.session_state["title_check_res"])
+        st.divider()
 
     col1, col2 = st.columns(2, gap="medium")
     with col1:

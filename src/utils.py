@@ -60,6 +60,12 @@ def remove_footnotes(text):
     # за исключением случаев с сокращениями типа "см."
     pattern = r"Сноска\..*?(?<!см)\.\s"
     cleaned_text = re.sub(pattern, "", text, flags=re.DOTALL)
+
+    pattern_izpi = r"Примечание ИЗПИ!.*?(?=\n[^\s])"
+
+    # Используем re.DOTALL, чтобы точка соответствовала переносам строки
+    cleaned_text = re.sub(pattern_izpi, "", cleaned_text, flags=re.DOTALL)
+
     return cleaned_text
 
 
@@ -176,6 +182,27 @@ def check_headers(text):
             })
         else:
             last_end = match.end()  # Обновляем последнюю позицию
+
+    return issues
+
+# Функция для проверки абзацев, начинающихся с дефиса или других знаков
+
+
+def check_paragraphs_not_start_with_symbols(text):
+    issues = []
+    # Паттерн для поиска абзацев, начинающихся с дефиса или других знаков
+    # in this case we are looking for paragraphs starting with [- , • , *, #]
+    # add more if needed
+    pattern = r"(?:\n|^)\s*([-*•#])"
+
+    for match in re.finditer(pattern, text):
+        # Для каждого найденного совпадения добавляем информацию об ошибке в список issues
+        issues.append({
+            "error_type": "Начало абзаца с недопустимого символа",
+            "error_text": f"Абзац начинается с символа: '{match.group(1)}'",
+            "start": match.start(1),  # Начальная позиция совпадения
+            "end": match.end(1),  # Конечная позиция совпадения
+        })
 
     return issues
 
