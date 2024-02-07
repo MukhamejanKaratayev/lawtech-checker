@@ -1,1 +1,1 @@
-from .utils import display_errors_with_streamlit, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_title_check_res
+from .utils import check_headers, display_errors_with_streamlit, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_title_check_res, check_article_numbering, check_paragraphs_start

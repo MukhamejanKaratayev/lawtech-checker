@@ -4,7 +4,7 @@ from io import StringIO
 import streamlit as st
 from annotated_text import annotated_text
 
-from src import find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
+from src import check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -72,6 +72,17 @@ with st.sidebar:
                 st.session_state["errors_in_text"] = find_incorrect_dates(
                     st.session_state["output_text"]
                 )
+                st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_article_numbering(
+                    st.session_state["output_text"]
+                )
+                # check_paragraphs_start, check_headers
+                # st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_paragraphs_start(
+                #     st.session_state["output_text"]
+                # )
+                # st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_headers(
+                #     st.session_state["output_text"]
+                # )
+                # error place
                 st.session_state["output_text_with_errors"] = highlight_errors(
                     st.session_state["output_text"], st.session_state["errors_in_text"]
                 )

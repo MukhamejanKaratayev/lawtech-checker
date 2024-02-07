@@ -21,7 +21,7 @@ class SyntaxCheck(BaseModel):
         ..., description="The exact user input that fails to meet the criteria."
     )
     error_desc: List[str] = Field(
-        ..., description="The concise description of the error."
+        ..., description="The concise description of the error in Russian language."
     )
 
 
@@ -84,13 +84,102 @@ def find_incorrect_dates(text):
         if not check_date_format(date):
             incorrect_dates.append(
                 {
-                    "error_type": "incorrect date",
+                    "error_type": "Некорректный формат даты",
                     "error_text": date,
                     "start": match.start(),
                     "end": match.end(),
                 }
             )
     return incorrect_dates
+
+# Функция для проверки нумерации
+
+
+def normalize_article_number(match):
+    # Разделяем номер статьи и подпункт, если он есть
+    parts = match.split('-')
+    if len(parts) == 1:
+        # Если подпункта нет, возвращаем основной номер и 0 в качестве подпункта
+        return int(parts[0]), 0
+    else:
+        # Возвращаем основной номер и номер подпункта
+        return int(parts[0]), int(parts[1])
+
+
+def compare_article_numbers(prev, current):
+    # Сравниваем основные номера и номера подпунктов
+    if current[0] == prev[0]:
+        return current[1] == prev[1] + 1
+    else:
+        return current[0] == prev[0] + 1 and current[1] == 0
+
+
+def check_article_numbering(text):
+    pattern = r"Статья (\d+(?:-\d+)?)"
+    matches = list(re.finditer(pattern, text))
+    issues = []
+    for i in range(1, len(matches)):
+        current_number = normalize_article_number(matches[i].group(1))
+        previous_number = normalize_article_number(matches[i - 1].group(1))
+
+        if not compare_article_numbers(previous_number, current_number):
+            issue_text = f"Статья {matches[i-1].group(1)} и Статья {matches[i].group(1)}"
+            issues.append({
+                "error_type": "Нарушение нумерации статей",
+                "error_text": issue_text,
+                "start": matches[i].start(),
+                "end": matches[i].end(),
+            })
+    return issues
+
+# Функция для проверки начала абзацев
+
+
+def check_paragraphs_start(text):
+    pattern = r"(?<=\n)\s*[а-я]"
+    issues = []
+    context_length = 30  # Количество символов для отображения до и после найденной позиции
+
+    for match in re.finditer(pattern, text):
+        start = max(match.start() - context_length, 0)
+        end = min(match.end() + context_length, len(text))
+        # Заменяем переносы строк на пробелы для удобства чтения
+        context = text[start:end].replace("\n", " ")
+        issues.append({
+            "error_type": "Абзац начинается со строчной буквы",
+            "error_text": f"...{context}...",
+            "start": match.start(),
+            "end": match.end(),
+        })
+    return issues
+
+# Функция для проверки заголовка
+
+
+def check_headers(text):
+    patterns = {
+        "раздел": r"Раздел \d+",
+        "подраздел": r"Подраздел \d+",
+        "параграф": r"Параграф \d+",
+    }
+    issues = []
+    last_end = 0  # Последняя позиция, где был найден заголовок
+    for header, pattern in patterns.items():
+        match = re.search(pattern, text, re.IGNORECASE)
+        if not match:
+            issues.append({
+                "error_type": "Отсутствует заголовок или подзаголовок",
+                "error_text": f"Отсутствует {header}",
+                "start": last_end,  # Используем конец последнего найденного заголовка
+                # Предполагаем, что ошибка начинается сразу после последнего заголовка
+                "end": last_end + 1,
+            })
+        else:
+            last_end = match.end()  # Обновляем последнюю позицию
+
+    return issues
+
+# Функция для выделения ошибок в тексте
 
 
 def highlight_errors(text, errors):
@@ -118,6 +207,9 @@ def highlight_errors(text, errors):
 
     # Call annotated_text with the collected parts
     return parts
+
+
+# Функция для отображения ошибок в Streamlit
 
 
 def display_errors_with_streamlit(errors):
@@ -160,7 +252,7 @@ def display_errors_with_streamlit(errors):
                 df_errors = df_errors.sort_values(by='Count', ascending=True)
 
                 # Отображение гистограммы в Streamlit
-                st.bar_chart(df_errors.set_index('Тип ошибки'))
+                st.bar_chart(df_errors.set_index('Тип ошибки'), color="#fea")
         # Выводим ошибки красивым образом
         # st.write("Детали ошибок:")
         # for error in errors:
@@ -169,15 +261,17 @@ def display_errors_with_streamlit(errors):
     else:
         st.success("Ошибок не найдено")
 
+# Функция для отображения результата проверки заголовка в Streamlit
+
 
 def display_title_check_res(title_check_res):
     st.subheader("Проверка заголовка:")
     if title_check_res.error_highlight != "":
-        st.caption("Заголовок: ")
+        st.write("Заголовок: ")
         st.subheader(title_check_res.error_highlight)
     if title_check_res.valid == False:
         st.error("Заголовок не соответствует требованиям")
-        st.write("Рекомендации:")
+        st.write("Текст ошибки:")
         for error in title_check_res.error_desc:
             st.write("- " + error)
     else:
