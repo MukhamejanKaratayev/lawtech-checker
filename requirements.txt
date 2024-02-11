@@ -5,3 +5,5 @@ pydantic
 pydantic_core
 llama-index
 openai
+pymupdf
+python-docx

@@ -20,7 +20,7 @@ import re
 
 LAW_NAMES = ['конституция', 'закон', 'кодекс', 'постановление', 'приказ']
 
-with open('data/z2300000013.29-06-2023.rus.txt', 'r', encoding='UTF-8') as file:
+with open('z2300000013.29-06-2023.rus.txt', 'r', encoding='UTF-8') as file:
     data = file.readlines()
 PATTERN_PAR = r'абзац[а-я]*'
 PATTERN_PART = r'\bчасть\b|\bчасти\b|\bчастью\b'
@@ -226,4 +226,3 @@ if __name__ == '__main__':
             if not v:
                 print(k)
                 print(v)
-

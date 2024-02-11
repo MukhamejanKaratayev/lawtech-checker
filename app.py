@@ -3,8 +3,9 @@ from io import StringIO
 
 import streamlit as st
 from annotated_text import annotated_text
-
+import fitz
 from src import check_paragraphs_not_start_with_symbols, check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
+from docx import Document
 
 st.set_page_config(
     page_title="LawTechChecker",
@@ -46,6 +47,14 @@ def read_text_file(uploaded_file):
     return stringio.read()
 
 
+def extract_text_from_docx(docx_file):
+    doc = Document(docx_file)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return '\n'.join(full_text)
+
+
 # Sidebar
 with st.sidebar:
     st.title("🗂 Ввод данных")
@@ -54,7 +63,8 @@ with st.sidebar:
     with tab1:
         # Вкладка с загрузкой файла, выбором порога и кнопкой предсказания (вкладка 1)
         uploaded_file = st.file_uploader(
-            "Выбрать CSV файл", type=["txt", "pdf"], on_change=reset_session_state
+            # "txt", "pdf", "docx"
+            "Выбрать DOCX файл", type=["docx"], on_change=reset_session_state
         )
         if uploaded_file is not None:
             check_buton = st.button(
@@ -63,7 +73,17 @@ with st.sidebar:
                 use_container_width=True,
                 key="button1",
             )
-            st.session_state["input_text"] = read_text_file(uploaded_file)
+            if uploaded_file.name.endswith(".pdf"):
+                pdf_file = fitz.open(stream=uploaded_file.read())
+                for page in pdf_file:
+                    text = page.get_text("text")
+                    st.session_state["input_text"] += text
+            elif uploaded_file.name.endswith(".txt"):
+                st.session_state["input_text"] = read_text_file(uploaded_file)
+            else:
+                st.session_state["input_text"] = extract_text_from_docx(
+                    uploaded_file)
+
             if check_buton:
                 # Предсказание и сохранение в session state
                 st.session_state["output_text"] = remove_footnotes(
@@ -79,9 +99,9 @@ with st.sidebar:
                 # st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_paragraphs_start(
                 #     st.session_state["output_text"]
                 # )
-                # st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_headers(
-                #     st.session_state["output_text"]
-                # )
+                st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_headers(
+                    st.session_state["output_text"]
+                )
                 # error place
                 # check_paragraphs_not_start_with_symbols
                 st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_paragraphs_not_start_with_symbols(
@@ -91,8 +111,8 @@ with st.sidebar:
                     st.session_state["output_text"], st.session_state["errors_in_text"]
                 )
                 # uncomment this
-                st.session_state["title_check_res"] = title_check(
-                    st.session_state["input_text"][:1000])
+                # st.session_state["title_check_res"] = title_check(
+                #     st.session_state["input_text"][:1000])
 
 # Main section start
 # Основной блок
@@ -127,6 +147,8 @@ if (
     with col1:
         st.subheader("Входной текст")
         st.write(st.session_state["input_text"])
+        # st.text_area("Входной текст",
+        #              value=st.session_state["input_text"], height=400)
     with col2:
         st.subheader("Результат")
         # st.write(st.session_state['output_text'])

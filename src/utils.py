@@ -58,10 +58,10 @@ def title_check(user_input: str) -> SyntaxCheck:
 def remove_footnotes(text):
     # Регулярное выражение для поиска абзацев, начинающихся с "Сноска." и заканчивающихся точкой с пробелом,
     # за исключением случаев с сокращениями типа "см."
-    pattern = r"Сноска\..*?(?<!см)\.\s"
+    pattern = r"Сноска\..*?(?<!см)(?<!ст)\.\s"
     cleaned_text = re.sub(pattern, "", text, flags=re.DOTALL)
 
-    pattern_izpi = r"Примечание ИЗПИ!.*?(?=\n[^\s])"
+    pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?\n\n"
 
     # Используем re.DOTALL, чтобы точка соответствовала переносам строки
     cleaned_text = re.sub(pattern_izpi, "", cleaned_text, flags=re.DOTALL)
