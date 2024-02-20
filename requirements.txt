@@ -1,9 +1,9 @@
 streamlit
 st-annotated-text
 streamlit-shadcn-ui
-pydantic
-pydantic_core
-llama-index
+pydantic==2.6.1
+pydantic_core==2.16.2
+llama-index==0.9.44
 openai
 pymupdf
 python-docx
