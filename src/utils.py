@@ -57,11 +57,12 @@ def title_check(user_input: str) -> SyntaxCheck:
 
 def remove_footnotes(text):
     # Регулярное выражение для поиска абзацев, начинающихся с "Сноска." и заканчивающихся точкой с пробелом,
-    # за исключением случаев с сокращениями типа "см."
+    # за исключением случаев с сокращениями типа "см." и "ст."
     pattern = r"Сноска\..*?(?<!см)(?<!ст)\.\s"
     cleaned_text = re.sub(pattern, "", text, flags=re.DOTALL)
 
-    pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?\n\n"
+    # pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?\n\n"
+    pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?(?=ОБЩАЯ ЧАСТЬ|РАЗДЕЛ 1|\n\n)"
 
     # Используем re.DOTALL, чтобы точка соответствовала переносам строки
     cleaned_text = re.sub(pattern_izpi, "", cleaned_text, flags=re.DOTALL)
@@ -96,6 +97,35 @@ def find_incorrect_dates(text):
                     "end": match.end(),
                 }
             )
+    return incorrect_dates
+
+
+def correct_incorrectly_spaced_dates(text):
+    # Pattern to match dates with incorrect space before the year
+    pattern = r'(\d{2}\.\d{2}\.)\s+(\d{4})'
+    # Replacement pattern (without the incorrect space)
+    replacement = r'\1\2'
+
+    # Correct the dates in the text
+    corrected_text = re.sub(pattern, replacement, text)
+
+    return corrected_text
+
+
+def find_incorrectly_spaced_dates(text):
+    incorrect_dates = []
+    # Pattern to match dates with incorrect space before the year
+    pattern = r'\d{2}\.\d{2}\.\s{1}\d{4}'
+
+    for match in re.finditer(pattern, text):
+        date = match.group(0)
+        incorrect_dates.append({
+            "error_type": "Некорректный формат даты (DD.MM.YYYY)",
+            "error_text": date,
+            "start": -1,
+            "end": -1,
+        })
+
     return incorrect_dates
 
 # Функция для проверки нумерации
@@ -218,6 +248,8 @@ def highlight_errors(text, errors):
 
     for error in errors:
         # Add text before the error, if any
+        if error["start"] == -1 and error["end"] == -1:
+            continue
         if error["start"] > last_idx:
             parts.append(text[last_idx: error["start"]])
 

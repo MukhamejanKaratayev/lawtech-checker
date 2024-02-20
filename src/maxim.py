@@ -17,11 +17,42 @@
 
 '''
 import re
+from docx import Document
+
+
+def extract_text_from_docx(docx_file):
+    doc = Document(docx_file)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return '\n'.join(full_text)
+
+
+def remove_footnotes(text):
+    # Регулярное выражение для поиска абзацев, начинающихся с "Сноска." и заканчивающихся точкой с пробелом,
+    # за исключением случаев с сокращениями типа "см." и "ст."
+    pattern = r"Сноска\..*?(?<!см)(?<!ст)\.\s"
+    cleaned_text = re.sub(pattern, "", text, flags=re.DOTALL)
+
+    # pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?\n\n"
+    pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?(?=ОБЩАЯ ЧАСТЬ|РАЗДЕЛ 1|\n\n)"
+
+    # Используем re.DOTALL, чтобы точка соответствовала переносам строки
+    cleaned_text = re.sub(pattern_izpi, "", cleaned_text, flags=re.DOTALL)
+
+    return cleaned_text
+
 
 LAW_NAMES = ['конституция', 'закон', 'кодекс', 'постановление', 'приказ']
 
-with open('z2300000013.29-06-2023.rus.txt', 'r', encoding='UTF-8') as file:
-    data = file.readlines()
+# with open('z2300000013.29-06-2023.rus.txt', 'r', encoding='UTF-8') as file:
+#     data = file.readlines()
+
+# СОЦИАЛЬНЫЙ КОДЕКС.docx, Налоговый кодекс.docx, О государственных закупках.docx, О государственных закупках ошибки.docx
+data = extract_text_from_docx(
+    '../data/docx/О государственных закупках ошибки.docx')
+data = remove_footnotes(data)
+
 PATTERN_PAR = r'абзац[а-я]*'
 PATTERN_PART = r'\bчасть\b|\bчасти\b|\bчастью\b'
 PATTERN_POINT = r'\bпунк[а-я]*'
@@ -38,6 +69,9 @@ CURSIVE = (r'перв[а-я]*|втор[а-я]*|трет[а-я]*|четверт[�
 APPENDIX = r'приложени[а-я]*'
 APPENDIX_CHECK_1 = r'\bк\b'
 APPENDIX_CHECK_2 = r'настоящ[а-я]*'
+
+# не работает потому что наименование документа не всегда начинается с LAW_NAMES
+# пример: О государственных закупках
 
 
 def is_word_wrapping(text: list['str']) -> bool:
@@ -218,8 +252,15 @@ def appendix_check(text: list[str], idx: int, flag: int) -> dict[str:bool]:
     return result
 
 
+def quote(s):
+    rep_dict = {' ': '\s', '\n': '\\n', '\t': '\\t'}
+    return "".join(rep_dict.get(c, c) for c in s)
+
+
 if __name__ == '__main__':
     # print(is_word_wrapping(data))
+    quote(data)
+    print(repr(data[:1000]))
     res = is_paragraph_link_numeration(data)
     for item in res:
         for k, v in item.items():
