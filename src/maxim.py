@@ -28,6 +28,50 @@ def extract_text_from_docx(docx_file):
     return '\n'.join(full_text)
 
 
+def read_and_clean_document(file_path):
+    # Extract text from the document as a single string
+    full_text = extract_text_from_docx(file_path)
+
+    # Clean the text
+    # Assuming remove_footnotes is a function that takes the full text of the document
+    # and returns a cleaned text where footnotes are removed
+    cleaned_text = remove_footnotes(full_text)
+
+    # Split the cleaned text back into a list of paragraphs
+    cleaned_paragraphs = cleaned_text.split('\n')
+
+    return cleaned_paragraphs
+
+
+def correct_incorrectly_spaced_dates(text):
+    # Pattern to match dates with incorrect space before the year
+    pattern = r'(\d{2}\.\d{2}\.)\s+(\d{4})'
+    # Replacement pattern (without the incorrect space)
+    replacement = r'\1\2'
+
+    # Correct the dates in the text
+    corrected_text = re.sub(pattern, replacement, text)
+
+    return corrected_text
+
+
+def find_incorrectly_spaced_dates(text):
+    incorrect_dates = []
+    # Pattern to match dates with incorrect space before the year
+    pattern = r'\d{2}\.\d{2}\.\s{1}\d{4}'
+
+    for match in re.finditer(pattern, text):
+        date = match.group(0)
+        incorrect_dates.append({
+            "error_type": "Некорректный формат даты (DD.MM.YYYY)",
+            "error_text": date,
+            "start": -1,
+            "end": -1,
+        })
+
+    return incorrect_dates
+
+
 def remove_footnotes(text):
     # Регулярное выражение для поиска абзацев, начинающихся с "Сноска." и заканчивающихся точкой с пробелом,
     # за исключением случаев с сокращениями типа "см." и "ст."
@@ -48,10 +92,6 @@ LAW_NAMES = ['конституция', 'закон', 'кодекс', 'поста
 # with open('z2300000013.29-06-2023.rus.txt', 'r', encoding='UTF-8') as file:
 #     data = file.readlines()
 
-# СОЦИАЛЬНЫЙ КОДЕКС.docx, Налоговый кодекс.docx, О государственных закупках.docx, О государственных закупках ошибки.docx
-data = extract_text_from_docx(
-    '../data/docx/О государственных закупках ошибки.docx')
-data = remove_footnotes(data)
 
 PATTERN_PAR = r'абзац[а-я]*'
 PATTERN_PART = r'\bчасть\b|\bчасти\b|\bчастью\b'
@@ -259,11 +299,25 @@ def quote(s):
 
 if __name__ == '__main__':
     # print(is_word_wrapping(data))
+    # СОЦИАЛЬНЫЙ КОДЕКС.docx, Налоговый кодекс.docx, О государственных закупках.docx, О государственных закупках ошибки.docx
+    # data = extract_text_from_docx(
+    #     '../data/docx/О государственных закупках ошибки.docx')
+    # doc = Document('../data/docx/О государственных закупках ошибки.docx')
+    # Extract text from each paragraph in the document
+    data = read_and_clean_document(
+        '../data/docx/О государственных закупках ошибки.docx')
+    # data = [para.text for para in doc.paragraphs]
+    print(data[:5])
+    # data = remove_footnotes(data)
+    # data = correct_incorrectly_spaced_dates(data)
     quote(data)
-    print(repr(data[:1000]))
+    # print(repr(data[:1000]))
     res = is_paragraph_link_numeration(data)
     for item in res:
         for k, v in item.items():
             if not v:
                 print(k)
                 print(v)
+                # write it to a file
+                with open('errors-maxim.txt', 'a', encoding='utf-8') as file:
+                    file.write(f'{k} - {v}\n-----------------------\n\n')

@@ -4,7 +4,7 @@ from io import StringIO
 import streamlit as st
 from annotated_text import annotated_text
 import fitz
-from src import correct_incorrectly_spaced_dates, find_incorrectly_spaced_dates, check_paragraphs_not_start_with_symbols, check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
+from src import check_main_rules, correct_incorrectly_spaced_dates, find_incorrectly_spaced_dates, check_paragraphs_not_start_with_symbols, check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
 from docx import Document
 
 st.set_page_config(
@@ -105,6 +105,11 @@ with st.sidebar:
                 st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_article_numbering(
                     st.session_state["output_text"]
                 )
+                # check_main_rules
+                st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_main_rules(
+                    st.session_state["output_text"]
+                )
+
                 # check_paragraphs_start, check_headers
                 # st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_paragraphs_start(
                 #     st.session_state["output_text"]

@@ -7,3 +7,4 @@ llama-index==0.9.44
 openai
 pymupdf
 python-docx
+streamlit-aggrid

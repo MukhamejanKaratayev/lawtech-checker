@@ -1,1 +1,2 @@
 from .utils import correct_incorrectly_spaced_dates, find_incorrectly_spaced_dates, check_paragraphs_not_start_with_symbols, check_headers, display_errors_with_streamlit, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_title_check_res, check_article_numbering, check_paragraphs_start
+from .rules import check_main_rules

@@ -28,9 +28,9 @@ def remove_footnotes(text):
 
 def segment_pdf_text_across_pages(full_text):
     chapter_pattern = re.compile(
-        r'(Глава\s*\d+\s*\..*?)(?=Глава\s*\d+\s*\.|$)', re.DOTALL)
+        r'(Глава\s*\d+\..*?)(?=Глава\s*\d+\.|$)', re.DOTALL)
     article_pattern = re.compile(
-        r'(Статья\s*\d+(?:-\d+)?\s*\..*?)(?=Статья\s*\d+(?:-\d+)?\s*\.|$)', re.DOTALL)
+        r'(Статья\s*\d+(?:-\d+)?\..*?)(?=Статья\s*\d+(?:-\d+)?\.|$)', re.DOTALL)
 
     chapters = [{'title': m.group(1).split('\n', 1)[0], 'content': m.group(
         1)} for m in chapter_pattern.finditer(full_text)]
@@ -271,8 +271,7 @@ def check_chapter_punctuation(chapters):
 # Проверка пунктуации статей
 def check_article_punctuation(articles):
     pattern = re.compile(r"^Статья\s[0-9]{1,3}\-{0,1}[0-9]{0,2}\.\s.*")
-    # pattern1 = re.compile(r"[0-9]{1,3}\-{0,1}[0-9]{0,2}+")
-    pattern1 = re.compile(r"[0-9]{1,3}-?[0-9]{0,2}")
+    pattern1 = re.compile(r"[0-9]{1,3}\-{0,1}[0-9]{0,2}")
     article_nums = []
     for i in range(len(articles)):
         match = re.findall(pattern, articles[i]['title'])
@@ -714,34 +713,27 @@ def main_check(articles):
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             tb_str = traceback.format_exc()
-            exception_errors.append(
+            errors.append(
                 f"{articles[i]['title']} : Unexpected error: {e} in article {i}\nTraceback: {tb_str}")
-            continue
 
 
 if __name__ == '__main__':
     errors = []
-    exception_errors = []
-    docx_file = "../data/docx/Налоговый кодекс.docx"
+    docx_file = "../data/docx/СОЦИАЛЬНЫЙ КОДЕКС.docx"
     text = extract_text_from_docx(docx_file)
     cleaned_text = remove_footnotes(text)
     chapters, articles = segment_pdf_text_across_pages(cleaned_text)
     check_numeration_chapter(chapters)
     check_chapter_punctuation(chapters)
     check_article_punctuation(articles)
-    # print(articles[0]['title'])
     main_check(articles)
     for i in range(len(articles)):
         indices1, lines1 = create_indices1(articles, i)
         check_punkt_punctuation(lines1, articles, i)
         check_roman_numbers(lines1,  articles, i)
-    print(len(errors))
-    # print('=====================')
-    # print(len(errors))
-    # print('=====================')
-    # print(exception_errors)
-    # with open("errors1.txt", "w", encoding='utf-8') as error_file:
+    print(errors)
+    # with open("errors1.txt", "w" , encoding='utf-8') as error_file:
     #     for error in errors:
-    #         error_file.write(json.dumps(error, ensure_ascii=False, indent=4))
+    #         error_file.write(json.dumps(error,ensure_ascii=False, indent=4))
     #         error_file.write("=====\n")
     #         error_file.write("=====\n")

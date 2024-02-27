@@ -6,6 +6,7 @@ from llama_index.llms import OpenAI
 from llama_index.program import OpenAIPydanticProgram
 import pandas as pd
 import streamlit_shadcn_ui as ui
+from st_aggrid import AgGrid
 
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
@@ -67,6 +68,9 @@ def remove_footnotes(text):
     # Используем re.DOTALL, чтобы точка соответствовала переносам строки
     cleaned_text = re.sub(pattern_izpi, "", cleaned_text, flags=re.DOTALL)
 
+    pattern_removed = r'\s*\d{1,3}(-\d+)?[).]\s*(Исключен|исключен|действовал до|Действовал до)(?!\.)\s.*?(?<!\bсм)(?<!\bст)[.;]\s'
+    cleaned_text = re.sub(pattern_removed, '', cleaned_text,
+                          flags=re.MULTILINE | re.DOTALL)
     return cleaned_text
 
 
@@ -248,7 +252,7 @@ def highlight_errors(text, errors):
 
     for error in errors:
         # Add text before the error, if any
-        if error["start"] == -1 and error["end"] == -1:
+        if error["start"] == -1 or error["end"] == -1:
             continue
         if error["start"] > last_idx:
             parts.append(text[last_idx: error["start"]])
@@ -295,23 +299,26 @@ def display_errors_with_streamlit(errors):
         df_errors.rename(
             columns={"error_type": "Тип ошибки", "error_text": "Текст ошибки"}, inplace=True
         )
+        df_errors['Текст ошибки'] = df_errors['Текст ошибки'].astype(str)
         # Вывод таблицы ошибок в Streamlit
         if len(df_errors) > 0:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("Детали ошибок:")
-                st.table(df_errors[["Тип ошибки", "Текст ошибки"]])
-            with col2:
-                # Преобразование подсчетов в DataFrame
-                st.write("Количество ошибок каждого типа:")
-                df_errors = pd.DataFrame(list(error_types_count.items()), columns=[
-                    'Тип ошибки', 'Count'])
+            # col1, col2 = st.columns(2)
+            # with col1:
+            st.write("Детали ошибок:")
+            # st.table(df_errors[["Тип ошибки", "Текст ошибки"]])
+            AgGrid(df_errors, height=500, width=500)
+            st.divider()
+            # with col2:
+            # Преобразование подсчетов в DataFrame
+            st.write("Количество ошибок каждого типа:")
+            df_errors = pd.DataFrame(list(error_types_count.items()), columns=[
+                'Тип ошибки', 'Count'])
 
-                # Сортировка для лучшей визуализации (опционально)
-                df_errors = df_errors.sort_values(by='Count', ascending=True)
+            # Сортировка для лучшей визуализации (опционально)
+            df_errors = df_errors.sort_values(by='Count', ascending=True)
 
-                # Отображение гистограммы в Streamlit
-                st.bar_chart(df_errors.set_index('Тип ошибки'), color="#fea")
+            # Отображение гистограммы в Streamlit
+            st.bar_chart(df_errors.set_index('Тип ошибки'), color="#fea")
         # Выводим ошибки красивым образом
         # st.write("Детали ошибок:")
         # for error in errors:
