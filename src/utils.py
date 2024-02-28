@@ -63,7 +63,7 @@ def remove_footnotes(text):
     cleaned_text = re.sub(pattern, "", text, flags=re.DOTALL)
 
     # pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?\n\n"
-    pattern_izpi = r"Примечание ИЗПИ!\n\n\s*.*?(?=ОБЩАЯ ЧАСТЬ|РАЗДЕЛ 1|\n\n)"
+    pattern_izpi = r"Примечание (ИЗПИ!|РЦПИ!)\n\n\s*.*?(?=ОБЩАЯ ЧАСТЬ|РАЗДЕЛ 1|\n\n)"
 
     # Используем re.DOTALL, чтобы точка соответствовала переносам строки
     cleaned_text = re.sub(pattern_izpi, "", cleaned_text, flags=re.DOTALL)
@@ -306,6 +306,7 @@ def display_errors_with_streamlit(errors):
             # with col1:
             st.write("Детали ошибок:")
             # st.table(df_errors[["Тип ошибки", "Текст ошибки"]])
+            df_errors = df_errors.drop_duplicates()
             AgGrid(df_errors, height=500, width=500)
             st.divider()
             # with col2:

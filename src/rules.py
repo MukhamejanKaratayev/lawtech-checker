@@ -46,8 +46,10 @@ def find_violation_position(text, target, whole_text):
 
 
 def check_ending_punctuation(articles, key):
-    start_sub_index = cleaned_text.find('\n'+str(articles[key]['title']))
-    end_sub_index = cleaned_text.find('\n'+str(articles[key+1]['title']))
+    # removed '\n', before '\n' + str(articles[key]['title'])
+    start_sub_index = cleaned_text.find(str(articles[key]['title']))
+    # removed '\n', before '\n' + str(articles[key]['title'])
+    end_sub_index = cleaned_text.find(str(articles[key+1]['title']))
     new_text = cleaned_text[start_sub_index-2: end_sub_index]
     strings = re.split(r'\n\n|(?<=;)', new_text)
     # strings = strings [1:len(strings)-1]
@@ -70,7 +72,7 @@ def check_ending_punctuation(articles, key):
         if i == 0 or strings[i-1][-1] in ('.', '!', '?'):
             match2 = re.findall(pattern1, match.group())
             if not match2:
-                error_type = 'Нарушение в начале абзаца . Абзац должен начинаться с заглавной буквы'
+                error_type = 'Нарушение в начале абзаца. Абзац должен начинаться с заглавной буквы'
                 a = cleaned_text.find(strings[i], start_sub_index)
                 b = a + 1
                 error = {
@@ -84,7 +86,7 @@ def check_ending_punctuation(articles, key):
         if strings[i-1][-1] in (':', ';'):
             match3 = re.findall(pattern2, match.group())
             if not match3:
-                error_type = 'Нарушение в начале абзаца . Абзац должен начинаться со строчной буквы'
+                error_type = 'Нарушение в начале абзаца. Абзац должен начинаться со строчной буквы'
                 a = cleaned_text.find(strings[i], start_sub_index)
                 b = a + 1
                 error = {
