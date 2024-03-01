@@ -152,23 +152,22 @@ def check_punkt_punctuation(lines, articles, i):
 # Ошибка в нахождении римских цифр
 
 
-def check_roman_numbers(lines, articles, i):
-    pattern = re.compile(r'(X{0,3})(IX|IV|V?I{0,3})(ix|iv|v?i{0,3})')
-    for line in lines:
-        matches = pattern.finditer(line)
-        for match in matches:
-            if len(match.group()) > 0:
-                error_type = 'Найдена римская нумерация'
-                a1 = cleaned_text.find(articles[i]['title'])
-                a = cleaned_text.find(match.group(), a1)
-                b = a + 3
-                error = {
-                    "error_type": error_type,
-                    "error_text": f"{articles[i]['title']}  в пункте/подпункте {line} ",
-                    "start": a,
-                    "end": b,
-                }
-                errors.append(error)
+def check_roman_numbers(cleaned_text):
+    pattern_roman = re.compile(r'(X{0,3})(IX|IV|V?I{0,3})(ix|iv|v?i{0,3})')
+    matches = pattern_roman.finditer(cleaned_text)
+    for match in matches:
+        if len(match.group()) > 0:
+            error_type = 'Найдена римская нумерация'
+            # a1 = cleaned_text.find(articles[i]['title'])
+            # a = cleaned_text.find(match.group(), a1)
+            # b = a + 3
+            error = {
+                "error_type": error_type,
+                "error_text": match.group(),
+                "start": match.start(),
+                "end": match.end(),
+            }
+            errors.append(error)
 
 
 def is_ordered(lst, is_chapter=False, articles=None, k=None, key=None):
@@ -717,7 +716,7 @@ def check_main_rules(full_text):
     for i in range(len(articles)):
         indices1, lines1 = create_indices1(articles, i)
         check_punkt_punctuation(lines1, articles, i)
-        check_roman_numbers(lines1,  articles, i)
+    check_roman_numbers(cleaned_text)
 
     return errors
     # print(errors)
