@@ -307,7 +307,7 @@ if __name__ == '__main__':
     data = read_and_clean_document(
         '../data/docx/О государственных закупках ошибки.docx')
     # data = [para.text for para in doc.paragraphs]
-    print(data[:5])
+    # print(data[:5])
     # data = remove_footnotes(data)
     # data = correct_incorrectly_spaced_dates(data)
     quote(data)

@@ -9,6 +9,7 @@ cleaned_text = ''
 def segment_pdf_text_across_pages(full_text):
     chapter_pattern = re.compile(
         r'(Глава\s*\d+\s*\..*?)(?=Глава\s*\d+\s*\.|$)', re.DOTALL)
+    #adding \s to the article pattern
     article_pattern = re.compile(
         r'(Статья\s*\d+(?:-\d+)?\s*\..*?)(?=Статья\s*\d+(?:-\d+)?\s*\.|$)', re.DOTALL)
 
@@ -60,12 +61,19 @@ def check_ending_punctuation(articles, key):
     strings = [s for s in strings if s]
     strings = [s.strip() for s in strings]
 
+    #добавить латинские буквы в паттерн(возможно)
     pattern = re.compile(r'[А-Яа-я]')
     pattern1 = re.compile(r'[А-Я]')
     pattern2 = re.compile(r'[а-я]')
+    pattern3 = re.compile(r'(?=.*\d)(?=.*[A-ZА-ЯЁ])[A-ZА-ЯЁ\d]+')
+    
 
     for i, string in enumerate(strings):
         match = re.search(pattern, string)
+        words = re.findall(r'\b\w+\b', string)
+        codematch = re.findall(pattern3 , words[0])
+        if len(codematch) > 0 :
+            continue
         if match is None:
             continue
 
@@ -140,7 +148,7 @@ def check_punkt_punctuation(lines, articles, i):
             a1 = cleaned_text.find(articles[i]['title'])
             a = cleaned_text.find(match1.group(), a1)
             b = a + 3
-            error_type = 'Найдены лишние слова'
+            error_type = "Нарушение названия части :Название части не должно содержать само слово 'Часть' "
             error = {
                 "error_type": error_type,
                 "error_text": f"{articles[i]['title']}  нарушение пунктуации , найдены лишние слова  {line} ",
@@ -153,7 +161,8 @@ def check_punkt_punctuation(lines, articles, i):
 
 
 def check_roman_numbers(cleaned_text):
-    pattern_roman = re.compile(r'(X{0,3})(IX|IV|V?I{0,3})(ix|iv|v?i{0,3})')
+    #changed pattern to match only the roman numbers that resemble часть or подпункт in the beginning of the line pattern_roman = re.compile(r'(X{0,3})(IX|IV|V?I{0,3})(ix|iv|v?i{0,3})')
+    pattern_roman = re.compile(r'\n\s*(X|x) |\n\s*(V|v)|\n\s*(I|i)')
     matches = pattern_roman.finditer(cleaned_text)
     for match in matches:
         if len(match.group()) > 0:
@@ -238,7 +247,6 @@ def check_chapter_punctuation(chapters):
         if not match:
             a = cleaned_text.find(chapters[i]['title'])
             b = a + 8
-            print(f"error at {chapters[i]['title']}")
             error_type = 'Пунктуация названия глав нарушена'
             error = {
                 "error_type": error_type,
@@ -357,7 +365,8 @@ def check_seq(articles, k):
     pattern3 = re.compile(r'^[А-Яа-я]+')
     pattern4 = re.compile(r'^[0-9]{1,3}\-{1}[0-9]{1,2}\.\s')
     pattern5 = re.compile(r'^[0-9]{1,3}\-{1}[0-9]{1,2}\)')
-    pattern6 = re.compile(r'^[А-Я]+.+\:$')
+    #this pattern was created for ignoring the lines that start with latin characters
+    pattern6 = re.compile(r'^[A-Za-z]+')
 
     matches_pattern = []
     matches_pattern1 = []
@@ -370,6 +379,10 @@ def check_seq(articles, k):
         for i in range(1, len(lines)):
             match_found = False
             for match in re.finditer(pattern3, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern6, lines[i]):
                 if len(match.group()) > 0:
                     match_found = True
                     continue
@@ -401,12 +414,16 @@ def check_seq(articles, k):
                     "end": b,
                 }
                 errors.append(error)
-                # print(lines[i])
-                # print("=====111")
+                #print(lines[i])
+                #print("========")
     else:
         for i in range(2, len(lines)):
             match_found = False
             for match in re.finditer(pattern3, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern6, lines[i]):
                 if len(match.group()) > 0:
                     match_found = True
                     continue
@@ -432,12 +449,12 @@ def check_seq(articles, k):
                 error = {
                     "error_type": error_type,
                     "error_text": [articles[i]['title'], lines[i]],
-                    "start": -1,
-                    "end": -1,
+                    "start": a,
+                    "end": b,
                 }
                 errors.append(error)
-                # print(lines[i])
-                # print("=====111")
+                #print(lines[i])
+                #print("=========")
 
     lines = lines[1:]
     return lines, matches_pattern5, matches_pattern4, matches_pattern, matches_pattern1
@@ -655,12 +672,12 @@ def check_sec_numeration_paragraph(items, articles=None, k=None, key=None):
 
 def main_check(articles):
     for i in range(len(articles)):
-        try:
+        try:    
             indices, matches5, matches4, matches3, lines, matches1 = create_indices(
                 articles, i)
             # print(f"LENGTH OF INDICES  {len(indices)}")
             if len(indices) == 0:
-                # print('non')
+                #print('non')
                 continue
             else:
                 indices_dict = create_dict_unique_keys(indices)
@@ -711,12 +728,12 @@ def check_main_rules(full_text):
     check_numeration_chapter(chapters)
     check_chapter_punctuation(chapters)
     check_article_punctuation(articles)
-    # print(articles[0]['title'])
     main_check(articles)
+    # print(cleaned_text[126817:126837])
+    check_roman_numbers(cleaned_text)
     for i in range(len(articles)):
         indices1, lines1 = create_indices1(articles, i)
         check_punkt_punctuation(lines1, articles, i)
-    check_roman_numbers(cleaned_text)
 
     return errors
     # print(errors)
