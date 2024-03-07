@@ -9,7 +9,7 @@ cleaned_text = ''
 def segment_pdf_text_across_pages(full_text):
     chapter_pattern = re.compile(
         r'(Глава\s*\d+\s*\..*?)(?=Глава\s*\d+\s*\.|$)', re.DOTALL)
-    #adding \s to the article pattern
+    # adding \s to the article pattern
     article_pattern = re.compile(
         r'(Статья\s*\d+(?:-\d+)?\s*\..*?)(?=Статья\s*\d+(?:-\d+)?\s*\.|$)', re.DOTALL)
 
@@ -61,18 +61,17 @@ def check_ending_punctuation(articles, key):
     strings = [s for s in strings if s]
     strings = [s.strip() for s in strings]
 
-    #добавить латинские буквы в паттерн(возможно)
+    # добавить латинские буквы в паттерн(возможно)
     pattern = re.compile(r'[А-Яа-я]')
     pattern1 = re.compile(r'[А-Я]')
     pattern2 = re.compile(r'[а-я]')
     pattern3 = re.compile(r'(?=.*\d)(?=.*[A-ZА-ЯЁ])[A-ZА-ЯЁ\d]+')
-    
 
     for i, string in enumerate(strings):
         match = re.search(pattern, string)
         words = re.findall(r'\b\w+\b', string)
-        codematch = re.findall(pattern3 , words[0])
-        if len(codematch) > 0 :
+        codematch = re.findall(pattern3, words[0])
+        if len(codematch) > 0:
             continue
         if match is None:
             continue
@@ -161,7 +160,7 @@ def check_punkt_punctuation(lines, articles, i):
 
 
 def check_roman_numbers(cleaned_text):
-    #changed pattern to match only the roman numbers that resemble часть or подпункт in the beginning of the line pattern_roman = re.compile(r'(X{0,3})(IX|IV|V?I{0,3})(ix|iv|v?i{0,3})')
+    # changed pattern to match only the roman numbers that resemble часть or подпункт in the beginning of the line pattern_roman = re.compile(r'(X{0,3})(IX|IV|V?I{0,3})(ix|iv|v?i{0,3})')
     pattern_roman = re.compile(r'\n\s*(X|x) |\n\s*(V|v)|\n\s*(I|i)')
     matches = pattern_roman.finditer(cleaned_text)
     for match in matches:
@@ -365,7 +364,7 @@ def check_seq(articles, k):
     pattern3 = re.compile(r'^[А-Яа-я]+')
     pattern4 = re.compile(r'^[0-9]{1,3}\-{1}[0-9]{1,2}\.\s')
     pattern5 = re.compile(r'^[0-9]{1,3}\-{1}[0-9]{1,2}\)')
-    #this pattern was created for ignoring the lines that start with latin characters
+    # this pattern was created for ignoring the lines that start with latin characters
     pattern6 = re.compile(r'^[A-Za-z]+')
 
     matches_pattern = []
@@ -414,8 +413,8 @@ def check_seq(articles, k):
                     "end": b,
                 }
                 errors.append(error)
-                #print(lines[i])
-                #print("========")
+                # print(lines[i])
+                # print("========")
     else:
         for i in range(2, len(lines)):
             match_found = False
@@ -453,8 +452,8 @@ def check_seq(articles, k):
                     "end": b,
                 }
                 errors.append(error)
-                #print(lines[i])
-                #print("=========")
+                # print(lines[i])
+                # print("=========")
 
     lines = lines[1:]
     return lines, matches_pattern5, matches_pattern4, matches_pattern, matches_pattern1
@@ -574,7 +573,6 @@ def group_by_numeration(items):
 def check_sec_numeration_paragraph(items, articles=None, k=None, key=None):
     last_num = 0
     is_special = False
-
     for i in range(len(items)):
         try:
             expression = re.compile(r'^[0-9]{1,3}\-{0,1}[0-9]{0,2}')
@@ -608,76 +606,76 @@ def check_sec_numeration_paragraph(items, articles=None, k=None, key=None):
             else:
                 num = int(match[0])
                 is_special = False
+
+        # print(last_num) , print(num)
+            if is_special:
+                if num != last_num + 1:
+                    error_type = 'Нарушена нумерация сложно-нумерированных статей'
+                    if articles == None:
+                        a = cleaned_text.find('\nСтатья '+str(items[i]))
+                        b = a + 12
+                        error = {
+                            "error_type": error_type,
+                            "error_text": f" ошибка в  Статье {items[i]}",
+                            "start": a,
+                            "end": b,
+                        }
+                        errors.append(error)
+                    elif key == None:
+                        index = cleaned_text.find(articles[k]['title'])
+                        a = cleaned_text.find(items[i], index)
+                        b = a + 6
+                        error_type = 'Нарушена нумерация сложно-нумерированных частей/подпунктов'
+                        error = {
+                            "error_type": error_type,
+                            "error_text": f" {articles[k]['title']} в части {key} и подпункте {items[i]}",
+                            "start": a,
+                            "end": b,
+                        }
+                        errors.append(error)
+
+                    else:
+                        index = cleaned_text.find(articles[k]['title'])
+                        key = key.split('_')[0]
+                        sub_index = cleaned_text.find(key, index)
+                        a = cleaned_text.find(items[i], sub_index)
+                        b = a + 6
+                        error_type = 'Нарушена нумерация сложно-нумерированных частей/подпунктов'
+                        error = {
+                            "error_type": error_type,
+                            "error_text": f" {articles[k]['title']} в части {key} и подпункте {items[i]}",
+                            "start": a,
+                            "end": b,
+                        }
+                        errors.append(error)
+
+            else:
+                if num != last_num + 1:
+                    error_type = 'Нарушена нумерация сложно-нумерированных подпунктов'
+                    error = {
+                        "error_type": error_type,
+                        "error_text": items[i],
+                        "start": -1,
+                        "end": -1,
+                    }
+                    errors.append(error)
+
+            last_num = num
+            # print(last_num) , print(num)
+            # print(items[i])
+            # print("========")
         except ValueError:
             return False
-
-        # print(last_num) , print(num)
-        if is_special:
-            if num != last_num + 1:
-                error_type = 'Нарушена нумерация сложно-нумерированных статей'
-                if articles == None:
-                    a = cleaned_text.find('\nСтатья '+str(items[i]))
-                    b = a + 12
-                    error = {
-                        "error_type": error_type,
-                        "error_text": f" ошибка в  Статье {items[i]}",
-                        "start": a,
-                        "end": b,
-                    }
-                    errors.append(error)
-                elif key == None:
-                    index = cleaned_text.find(articles[k]['title'])
-                    a = cleaned_text.find(items[i], index)
-                    b = a + 6
-                    error_type = 'Нарушена нумерация сложно-нумерированных частей/подпунктов'
-                    error = {
-                        "error_type": error_type,
-                        "error_text": f" {articles[k]['title']} в части {key} и подпункте {items[i]}",
-                        "start": a,
-                        "end": b,
-                    }
-                    errors.append(error)
-
-                else:
-                    index = cleaned_text.find(articles[k]['title'])
-                    key = key.split('_')[0]
-                    sub_index = cleaned_text.find(key, index)
-                    a = cleaned_text.find(items[i], sub_index)
-                    b = a + 6
-                    error_type = 'Нарушена нумерация сложно-нумерированных частей/подпунктов'
-                    error = {
-                        "error_type": error_type,
-                        "error_text": f" {articles[k]['title']} в части {key} и подпункте {items[i]}",
-                        "start": a,
-                        "end": b,
-                    }
-                    errors.append(error)
-
-        else:
-            if num != last_num + 1:
-                error_type = 'Нарушена нумерация сложно-нумерированных подпунктов'
-                error = {
-                    "error_type": error_type,
-                    "error_text": items[i],
-                    "start": -1,
-                    "end": -1,
-                }
-                errors.append(error)
-
-        last_num = num
-        # print(last_num) , print(num)
-        # print(items[i])
-        # print("========")
 
 
 def main_check(articles):
     for i in range(len(articles)):
-        try:    
+        try:
             indices, matches5, matches4, matches3, lines, matches1 = create_indices(
                 articles, i)
             # print(f"LENGTH OF INDICES  {len(indices)}")
             if len(indices) == 0:
-                #print('non')
+                # print('non')
                 continue
             else:
                 indices_dict = create_dict_unique_keys(indices)
