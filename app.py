@@ -126,8 +126,8 @@ with st.sidebar:
                     st.session_state["output_text"], st.session_state["errors_in_text"]
                 )
                 # uncomment this
-                st.session_state["title_check_res"] = title_check(
-                    st.session_state["input_text"][:1000])
+                # st.session_state["title_check_res"] = title_check(
+                #     st.session_state["input_text"][:1000])
 
 # Main section start
 # Основной блок
