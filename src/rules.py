@@ -104,6 +104,55 @@ def check_ending_punctuation(articles, key):
                 }
                 errors.append(error)
 
+# def check_ending_punctuation(articles, key):
+#     # Handle edge cases for article indexing
+#     if key >= len(articles) - 1:
+#         return  # Exit function if key is out of bounds for articles
+
+#     # Safely extract titles and their positions in the cleaned text
+#     start_sub_index = max(0, cleaned_text.find(articles[key]['title']))
+#     end_sub_index = cleaned_text.find(
+#         articles[key + 1]['title'], start_sub_index)
+#     if end_sub_index == -1:
+#         end_sub_index = len(cleaned_text)
+
+#     new_text = cleaned_text[start_sub_index: end_sub_index]
+#     strings = re.split(r'\n\n|(?<=;)', new_text)
+#     strings = [s.strip() for s in strings if s.strip()
+#                and 'Статья' not in s and s != '\xa0\xa0\xa0\xa0\xa0 ']
+
+#     # Patterns for checking capitalization
+#     pattern_capital = re.compile(r'[А-Я]')
+#     pattern_non_capital = re.compile(r'[а-я]')
+
+#     # Pattern to exclude codes and abbreviations
+#     pattern_code = re.compile(r'(?=.*\d)(?=.*[A-ZА-ЯЁ])[A-ZА-ЯЁ\d]+')
+
+#     for i, string in enumerate(strings):
+#         if not string or pattern_code.findall(string.split()[0]):
+#             continue  # Skip empty strings or strings starting with a code
+
+#         # Check for starting capital or non-capital letter as per punctuation rules
+#         start_letter = string[0]
+#         prev_char = strings[i-1][-1] if i > 0 else None
+
+#         # Determine error type based on preceding character and capitalization
+#         if prev_char in ('.', '!', '?') and not pattern_capital.match(start_letter):
+#             error_type = 'Нарушение в начале абзаца. Абзац должен начинаться с заглавной буквы'
+#         elif prev_char in (':', ';') and not pattern_non_capital.match(start_letter):
+#             error_type = 'Нарушение в начале абзаца. Абзац должен начинаться со строчной буквы'
+#         else:
+#             continue  # No error found
+
+#         # Record the error
+#         error_position = cleaned_text.find(string, start_sub_index)
+#         errors.append({
+#             "error_type": error_type,
+#             "error_text": [articles[key]['title'], string],
+#             "start": error_position,
+#             "end": error_position + 1
+#         })
+
 
 def find_violation_position1(text, target, whole_text):
     pattern = re.compile(r'(?<!-)[0-9]{1,3}\..+[\:\.]')
@@ -665,6 +714,7 @@ def check_sec_numeration_paragraph(items, articles=None, k=None, key=None):
             # print(items[i])
             # print("========")
         except ValueError:
+            print('Error occurred in numeration check' + str(match[0]))
             return False
 
 

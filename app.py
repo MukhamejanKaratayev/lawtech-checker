@@ -4,7 +4,7 @@ from io import StringIO
 import streamlit as st
 from annotated_text import annotated_text
 import fitz
-from src import check_main_rules, correct_incorrectly_spaced_dates, find_incorrectly_spaced_dates, check_paragraphs_not_start_with_symbols, check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
+from src import remove_errors_from_patterns, find_footnotes, check_main_rules, correct_incorrectly_spaced_dates, find_incorrectly_spaced_dates, check_paragraphs_not_start_with_symbols, check_headers, check_paragraphs_start, check_article_numbering, find_incorrect_dates, highlight_errors, remove_footnotes, title_check, display_errors_with_streamlit, display_title_check_res
 from docx import Document
 
 st.set_page_config(
@@ -20,6 +20,9 @@ if "input_text" not in st.session_state:
 
 if "output_text" not in st.session_state:
     st.session_state["output_text"] = ""
+
+if "removed_patterns" not in st.session_state:
+    st.session_state["removed_patterns"] = []
 
 if "title_check_res" not in st.session_state:
     st.session_state["title_check_res"] = ""
@@ -87,18 +90,22 @@ with st.sidebar:
             if check_buton:
                 # Предсказание и сохранение в session state
 
-                st.session_state["errors_in_text"] = find_incorrectly_spaced_dates(
-                    st.session_state["input_text"]
-                )
+                # st.session_state["errors_in_text"] = find_incorrectly_spaced_dates(
+                #     st.session_state["input_text"]
+                # )
 
                 st.session_state["output_text"] = correct_incorrectly_spaced_dates(
                     st.session_state["input_text"]
                 )
 
-                st.session_state["output_text"] = remove_footnotes(
+                # st.session_state["output_text"] = remove_footnotes(
+                #     st.session_state["output_text"]
+                # )
+
+                st.session_state["removed_patterns"] = find_footnotes(
                     st.session_state["output_text"]
                 )
-                st.session_state["errors_in_text"] += find_incorrect_dates(
+                st.session_state["errors_in_text"] = find_incorrect_dates(
                     st.session_state["output_text"]
                 )
 
@@ -122,6 +129,9 @@ with st.sidebar:
                 st.session_state["errors_in_text"] = st.session_state["errors_in_text"] + check_paragraphs_not_start_with_symbols(
                     st.session_state["output_text"]
                 )
+                st.session_state["errors_in_text"] = remove_errors_from_patterns(
+                    st.session_state["errors_in_text"], st.session_state["removed_patterns"])
+
                 st.session_state["output_text_with_errors"] = highlight_errors(
                     st.session_state["output_text"], st.session_state["errors_in_text"]
                 )

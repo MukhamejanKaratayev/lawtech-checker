@@ -74,7 +74,39 @@ def remove_footnotes(text):
     return cleaned_text
 
 
+def find_footnotes(text):
+    # Dictionary to store results
+    patterns_info = []
+
+    # Pattern to find paragraphs starting with "Сноска." and ending with a period followed by a space,
+    # excluding cases with abbreviations like "см." and "ст."
+    pattern_footnote = r"Сноска\..*?(?<!см)(?<!ст)\.\s"
+    for match in re.finditer(pattern_footnote, text, flags=re.DOTALL):
+        patterns_info.append(('footnote', match.start(), match.end()))
+
+    # Pattern for "Примечание ИЗПИ!" or "Примечание РЦПИ!" sections
+    pattern_izpi = r"Примечание (ИЗПИ!|РЦПИ!)\n\n\s*.*?(?=ОБЩАЯ ЧАСТЬ|РАЗДЕЛ 1|\n\n)"
+    for match in re.finditer(pattern_izpi, text, flags=re.DOTALL):
+        patterns_info.append(('izpi', match.start(), match.end()))
+
+    # Pattern for removed sections or sections valid until a specific date
+    pattern_removed = r'\s*\d{1,3}(-\d+)?[).]\s*(Исключен|исключен|исключен,|Исключен,|действовал до|Действовал до|действовал с|Действовал с)(?!\.)\s.*?(?<!\bсм)(?<!\bст)[.;]\s'
+    for match in re.finditer(pattern_removed, text, flags=re.MULTILINE | re.DOTALL):
+        patterns_info.append(('removed', match.start(), match.end()))
+
+    pattern_formula = r'\b[А-Яа-я]{1,3}\s*[–=:х]\s*'
+    for match in re.finditer(pattern_formula, text, flags=re.DOTALL):
+        patterns_info.append(('formula', match.start(), match.end()))
+
+    pattern_formula2 = r'(\b[А-Я]{1,2}\s*(\(\d+\))?\s*[–=:]\s*|([А-Я]|\(\s*[А-Я]+\s*[+\-х/]\s*[А-Я]+\s*\))\s*[+\-х/]\s*)+([А-Я]|\(\s*[А-Я]+\s*[+\-х/]\s*[А-Я]+\s*\))*'
+    for match in re.finditer(pattern_formula2, text, flags=re.DOTALL):
+        patterns_info.append(('formula2', match.start(), match.end()))
+
+    return patterns_info
+
 # Модифицированная функция для проверки корректности дат
+
+
 def check_date_format(date):
     # Добавлено условие для распознавания дат в формате DD.MM.YYYY
     correct_format = re.compile(
@@ -241,6 +273,26 @@ def check_paragraphs_not_start_with_symbols(text):
     return issues
 
 # Функция для выделения ошибок в тексте
+
+
+def remove_errors_from_patterns(errors, removed_patterns):
+    filtered_errors = []
+
+    for error in errors:
+        error_overlaps = False
+        for pattern in removed_patterns:
+            if not (error["end"] <= int(pattern[1]) or error["start"] >= int(pattern[2])):
+                error_overlaps = True
+                break
+            diffr = error["start"] - int(pattern[2])
+            if diffr > 0 and diffr <= 15 and (error["error_type"] == "Нумерация статей нарушена" or error["error_type"] == "Нарушение в начале абзаца. Абзац должен начинаться с заглавной буквы" or error["error_type"] == "Нарушение в начале абзаца. Абзац должен начинаться со строчной буквы"):
+                # print("Hello I am here")
+                error_overlaps = True
+
+        if not error_overlaps:
+            filtered_errors.append(error)
+
+    return filtered_errors
 
 
 def highlight_errors(text, errors):
