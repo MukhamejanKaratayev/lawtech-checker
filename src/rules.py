@@ -288,7 +288,7 @@ def is_ordered(lst, is_chapter=False, articles=None, k=None, key=None):
 
 # проверка пунктуации глав
 def check_chapter_punctuation(chapters):
-    pattern = re.compile(r"^Глава\s[0-9]{1,2}\.\s.*")
+    pattern = re.compile(r"^Глава\s[0-9]{1,2}\.")
     error_type = ''
     for i in range(len(chapters)):
         match = re.match(pattern, chapters[i]['title'])
@@ -410,11 +410,15 @@ def check_seq(articles, k):
     pattern = re.compile(r'^[0-9]')
     pattern1 = re.compile(r'^[0-9]+\)\s{1}')
     pattern2 = re.compile(r'^[0-9]+\.\s')
-    pattern3 = re.compile(r'^[А-Яа-я]+')
+    pattern3 = re.compile(r'^[\«\(]{0,1}[А-Яа-я]+')
     pattern4 = re.compile(r'^[0-9]{1,3}\-{1}[0-9]{1,2}\.\s')
     pattern5 = re.compile(r'^[0-9]{1,3}\-{1}[0-9]{1,2}\)')
     # this pattern was created for ignoring the lines that start with latin characters
     pattern6 = re.compile(r'^[A-Za-z]+')
+    pattern7 = re.compile(r'^\–\s[а-я]+')
+    pattern8 = re.compile(r'^[0-9]{1,3}\s[а-я]+')
+    pattern9 = re.compile(r'^[0-9]{1,3}\-{0,1}[0-9]{0,2}\s[А-Я]+')
+    pattern10 = re.compile(r'^[0-9]+\)\,')
 
     matches_pattern = []
     matches_pattern1 = []
@@ -431,6 +435,22 @@ def check_seq(articles, k):
                     match_found = True
                     continue
             for match in re.finditer(pattern6, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern7, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern8, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern9, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern10, lines[i]):
                 if len(match.group()) > 0:
                     match_found = True
                     continue
@@ -472,6 +492,22 @@ def check_seq(articles, k):
                     match_found = True
                     continue
             for match in re.finditer(pattern6, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern7, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern8, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern9, lines[i]):
+                if len(match.group()) > 0:
+                    match_found = True
+                    continue
+            for match in re.finditer(pattern10, lines[i]):
                 if len(match.group()) > 0:
                     match_found = True
                     continue
