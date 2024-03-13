@@ -658,6 +658,7 @@ def group_by_numeration(items):
 def check_sec_numeration_paragraph(items, articles=None, k=None, key=None):
     last_num = 0
     is_special = False
+    num = -100
     for i in range(len(items)):
         try:
             expression = re.compile(r'^[0-9]{1,3}\-{0,1}[0-9]{0,2}')
